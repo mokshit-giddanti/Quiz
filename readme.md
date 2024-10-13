@@ -65,6 +65,4 @@ This project is a web-based quiz platform that allows users to take quizzes and 
 - **GET** `/api/quizzes/:id` - Get a quiz by ID
 - **POST** `/api/quizzes/:id/submit` - Submit quiz and get score
 
-## License
-
 
