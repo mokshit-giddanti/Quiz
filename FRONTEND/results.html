@@ -26,7 +26,7 @@
 
             try {
                 // Fetch quiz details
-                const quizResponse = await fetch(`http://localhost:3000/api/quizzes/${quizId}`, {
+                const quizResponse = await fetch(`http://3.110.103.223:3000/api/quizzes/${quizId}`, {
                     headers: {
                         'Authorization': token,
                     },
@@ -39,7 +39,7 @@
                 const totalQuestions = quiz.questions.length; // Get total number of questions
 
                 // Fetch results
-                const resultsResponse = await fetch(`http://localhost:3000/api/results?quizId=${quizId}`, {
+                const resultsResponse = await fetch(`http://3.110.103.223:3000/api/results?quizId=${quizId}`, {
                     headers: {
                         'Authorization': token,
                     },
