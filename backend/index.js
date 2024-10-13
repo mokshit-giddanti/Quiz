@@ -110,6 +110,32 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Admin - Create a Quiz
+app.post('/api/admin/quizzes', auth, adminAuth, async (req, res) => {
+    const { title, questions } = req.body;
+
+    try {
+        const quiz = new Quiz({ title, questions });
+        await quiz.save();
+        res.send({ message: 'Quiz created successfully' });
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
+// Admin - Delete a Quiz
+app.delete('/api/admin/quizzes/:id', auth, adminAuth, async (req, res) => {
+    try {
+        const quiz = await Quiz.findByIdAndDelete(req.params.id);
+        if (!quiz) return res.status(404).send('Quiz not found');
+
+        res.send({ message: 'Quiz deleted successfully' });
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
+
 
 // Start the server
 app.listen(PORT, () => {
