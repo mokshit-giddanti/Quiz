@@ -166,7 +166,54 @@ app.get('/api/quizzes/:id', auth, async (req, res) => {
     }
 });
 
+// Submit Quiz and Get Result (User)
+app.post('/api/quizzes/:id/submit', auth, async (req, res) => {
+    const { answers } = req.body;
 
+    try {
+        const quiz = await Quiz.findById(req.params.id);
+        if (!quiz) return res.status(404).send('Quiz not found');
+
+        let score = 0;
+        quiz.questions.forEach((question, index) => {
+            if (question.correctOption === answers[index]) score++;
+        });
+
+        // Check if result already exists
+        const existingResult = await Result.findOne({ user: req.user.id, quiz: quiz._id });
+        if (existingResult) {
+            // Update the score
+            existingResult.score = score;
+            await existingResult.save();
+            res.send({ message: `Your score has been updated to ${score}/${quiz.questions.length}` });
+        } else {
+            // Save new result
+            const result = new Result({
+                user: req.user.id,
+                quiz: quiz._id,
+                score: score,
+            });
+            await result.save();
+            res.send({ message: `Quiz submitted. Your score: ${score}/${quiz.questions.length}` });
+        }
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
+
+// Get User's Results (For regular users)
+// Get Results for a Specific Quiz
+app.get('/api/results', auth, async (req, res) => {
+    const quizId = req.query.quizId;
+
+    try {
+        const results = await Result.find({ quiz: quizId }).populate('user');
+        res.send(results);
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
 
 
 // Start the server
