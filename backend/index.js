@@ -135,6 +135,38 @@ app.delete('/api/admin/quizzes/:id', auth, adminAuth, async (req, res) => {
     }
 });
 
+// Admin - View All Users' Results
+app.get('/api/admin/results', auth, adminAuth, async (req, res) => {
+    try {
+        const results = await Result.find().populate('user quiz');
+        res.send(results);
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
+// Get All Quizzes (For both users and admin)
+app.get('/api/quizzes', auth, async (req, res) => {
+    try {
+        const quizzes = await Quiz.find();
+        res.send(quizzes);
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
+// Get Quiz by ID (For both users and admin)
+app.get('/api/quizzes/:id', auth, async (req, res) => {
+    try {
+        const quiz = await Quiz.findById(req.params.id);
+        if (!quiz) return res.status(404).send('Quiz not found');
+        res.send(quiz);
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
+
 
 
 // Start the server
