@@ -92,7 +92,23 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
+// User Login
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
 
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).send({ message: 'Invalid email or password' });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).send({ message: 'Invalid email or password' });
+
+        const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
+        res.send({ token, isAdmin: user.isAdmin });  // Send isAdmin in the response
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
 
 
 // Start the server
