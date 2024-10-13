@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results</title>
+    <script>
+        // Check if token exists
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You are not authorized to view this page. Please log in.');
+            window.location.href = 'login.html'; // Redirect to login page
+        }
+    </script>
+</head>
+<body>
+    <h1>Quiz Results</h1>
+    <h2 id="quizTitle"></h2>
+    <div id="resultsContainer"></div>
+
+    <script>
+        async function loadResults() {
+            const params = new URLSearchParams(window.location.search);
+            const quizId = params.get('quizId');
+            const token = localStorage.getItem('token');
+
+            try {
+                // Fetch quiz details
+                const quizResponse = await fetch(`http://localhost:3000/api/quizzes/${quizId}`, {
+                    headers: {
+                        'Authorization': token,
+                    },
+                });
+
+                if (!quizResponse.ok) throw new Error('Failed to fetch quiz details');
+                const quiz = await quizResponse.json();
+                document.getElementById('quizTitle').innerText = quiz.title;
+
+                const totalQuestions = quiz.questions.length; // Get total number of questions
+
+                // Fetch results
+                const resultsResponse = await fetch(`http://localhost:3000/api/results?quizId=${quizId}`, {
+                    headers: {
+                        'Authorization': token,
+                    },
+                });
+
+                if (!resultsResponse.ok) throw new Error('Failed to fetch results');
+                const results = await resultsResponse.json();
+
+                const resultsContainer = document.getElementById('resultsContainer');
+                resultsContainer.innerHTML = results.map(result => `
+                    <div>
+                        <p>${result.user.name} - Score: ${result.score} / ${totalQuestions}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading results:', error);
+                alert('An error occurred while loading results.');
+            }
+        }
+
+        loadResults(); // Load results on page load
+    </script>
+</body>
+</html>

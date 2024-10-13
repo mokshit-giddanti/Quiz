@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Manage Quizzes</title>
+    <script>
+        // Check if token exists
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You are not authorized to view this page. Please log in.');
+            window.location.href = 'login.html'; // Redirect to login page
+        }
+    </script>
+</head>
+<body>
+    <h1>Admin - Add New Quiz</h1>
+    <form id="quizForm">
+        <label for="title">Quiz Title</label>
+        <input type="text" id="title" required>
+
+        <div id="questionsContainer">
+            <h3>Questions</h3>
+            <div class="question">
+                <label for="question">Question</label>
+                <input type="text" class="questionText" required>
+
+                <label for="option1">Option 1</label>
+                <input type="text" class="option" required>
+
+                <label for="option2">Option 2</label>
+                <input type="text" class="option" required>
+
+                <label for="option3">Option 3</label>
+                <input type="text" class="option" required>
+
+                <label for="option4">Option 4</label>
+                <input type="text" class="option" required>
+
+                <label for="correctOption">Correct Option (Enter a number between 1 and 4)</label>
+                <input type="number" class="correctOption" min="1" max="4" required>
+                
+                <button type="button" class="removeQuestion">Remove Question</button>
+            </div>
+        </div>
+        <button type="button" id="addQuestion">Add Another Question</button>
+        <button type="submit">Create Quiz</button>
+    </form>
+
+    <h1>Existing Quizzes</h1>
+    <div id="quizzesContainer"></div>
+
+    <script>
+        document.getElementById('addQuestion').onclick = function() {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+            questionDiv.innerHTML = `
+                <label for="question">Question</label>
+                <input type="text" class="questionText" required>
+
+                <label for="option1">Option 1</label>
+                <input type="text" class="option" required>
+
+                <label for="option2">Option 2</label>
+                <input type="text" class="option" required>
+
+                <label for="option3">Option 3</label>
+                <input type="text" class="option" required>
+
+                <label for="option4">Option 4</label>
+                <input type="text" class="option" required>
+
+                <label for="correctOption">Correct Option (Enter a number between 1 and 4)</label>
+                <input type="number" class="correctOption" min="1" max="4" required>
+
+                <button type="button" class="removeQuestion">Remove Question</button>
+            `;
+            document.getElementById('questionsContainer').appendChild(questionDiv);
+
+            questionDiv.querySelector('.removeQuestion').onclick = function() {
+                questionDiv.remove();
+            };
+        };
+
+        document.getElementById('quizForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('token');
+            const title = document.getElementById('title').value;
+            const questions = Array.from(document.querySelectorAll('.question')).map(q => ({
+                questionText: q.querySelector('.questionText').value,
+                options: Array.from(q.querySelectorAll('.option')).map(opt => ({ optionText: opt.value })),
+                correctOption: parseInt(q.querySelector('.correctOption').value) - 1,
+            }));
+
+            try {
+                const response = await fetch('http://localhost:3000/api/admin/quizzes', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title, questions }),
+                });
+
+                if (response.ok) {
+                    alert('Quiz created successfully!');
+                    loadQuizzes(); // Refresh quiz list
+                    document.getElementById('quizForm').reset(); // Reset form
+                } else {
+                    const errorData = await response.json();
+                    alert(`Failed to create quiz: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Error creating quiz:', error);
+                alert('An error occurred while creating the quiz.');
+            }
+        };
+
+        async function loadQuizzes() {
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch('http://localhost:3000/api/quizzes', {
+                    headers: {
+                        'Authorization': token,
+                    },
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch quizzes');
+                const quizzes = await response.json();
+
+                const quizzesContainer = document.getElementById('quizzesContainer');
+                quizzesContainer.innerHTML = quizzes.map(quiz => `
+                    <div>
+                        <h3>${quiz.title}</h3>
+                        <button onclick="deleteQuiz('${quiz._id}')">Delete Quiz</button>
+                        <button onclick="openResultsPage('${quiz._id}')">View Results</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+                alert('An error occurred while loading quizzes.');
+            }
+        }
+
+        function openResultsPage(quizId) {
+            window.open(`results.html?quizId=${quizId}`, '_blank');
+        }
+
+        async function deleteQuiz(quizId) {
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/admin/quizzes/${quizId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': token,
+                    },
+                });
+
+                if (response.ok) {
+                    alert('Quiz deleted successfully');
+                    loadQuizzes(); // Refresh the quiz list
+                } else {
+                    const errorData = await response.json();
+                    alert(`Failed to delete quiz: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Error deleting quiz:', error);
+                alert('An error occurred while deleting the quiz.');
+            }
+        }
+
+        loadQuizzes(); // Load existing quizzes on page load
+    </script>
+</body>
+</html>

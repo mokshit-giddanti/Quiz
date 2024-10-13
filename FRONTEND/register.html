@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+    <h1>Register</h1>
+    <form id="registerForm">
+        <label for="name">Name</label>
+        <input type="text" id="name" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" required>
+
+        <label for="isAdmin">Register as Admin</label>
+        <input type="checkbox" id="isAdmin">
+
+        <button type="submit">Register</button>
+    </form>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const isAdmin = document.getElementById('isAdmin').checked; // Get the value of isAdmin checkbox
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, password, isAdmin }) // Pass isAdmin as boolean
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Registration successful');
+                    window.location.href = 'login.html'; // Redirect to login after successful registration
+                } else {
+                    alert(result.message); // Display the error message
+                }
+            } catch (error) {
+                alert('Failed to register. Try again.');
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>

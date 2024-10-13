@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="loginForm">
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+        <label for="password">Password</label>
+        <input type="password" id="password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+    
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+    
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+    
+                const result = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('token', result.token); // Save token
+    
+                    // Check if the user is an admin and redirect accordingly
+                    console.log(result.isAdmin);
+                    if (result.isAdmin) {
+                        alert('Admin login successful');
+                        window.location.href = 'admin.html';  // Redirect to admin page if admin
+                    } else {
+                        alert('Login successful');
+                        window.location.href = 'quiz.html';  // Redirect to quiz page if not admin
+                    }
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Login failed. Try again.');
+                console.error(error);
+            }
+        });
+    </script>
+    
+</body>
+</html>

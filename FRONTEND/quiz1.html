@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Quiz</title>
+</head>
+<body>
+    <h1>Take Quiz</h1>
+    <div id="quizContainer"></div>
+
+    <script>
+        async function loadQuiz() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('You are not authorized to view this page. Please log in.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const quizId = params.get('quizId');
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/quizzes/${quizId}`, {
+                    headers: {
+                        'Authorization': `${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.message}`);
+                    return;
+                }
+
+                const quiz = await response.json();
+                const quizContainer = document.getElementById('quizContainer');
+                quizContainer.innerHTML = `
+                    <h3>${quiz.title}</h3>
+                    ${quiz.questions.map((q, qIndex) => `
+                        <p>${q.questionText}</p>
+                        ${q.options.map((option, optIndex) => `
+                            <label>
+                                <input type="radio" name="q${qIndex}" value="${optIndex}"> 
+                                ${option.optionText}
+                            </label><br>
+                        `).join('')}
+                    `).join('')}
+                    <button onclick="submitQuiz('${quizId}')">Submit Quiz</button>
+                `;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('An error occurred while loading the quiz.');
+            }
+        }
+
+        async function submitQuiz(quizId) {
+            const quizContainer = document.getElementById('quizContainer');
+            const answers = [];
+            const inputs = quizContainer.querySelectorAll(`input:checked`);
+
+            inputs.forEach(input => {
+                answers.push(parseInt(input.value));
+            });
+
+            if (answers.length === 0) {
+                alert('Please select answers before submitting.');
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3000/api/quizzes/${quizId}/submit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `${token}`
+                },
+                body: JSON.stringify({ answers })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+
+            // Redirect to results page
+            window.location.href = `results.html?quizId=${quizId}`;
+        }
+
+        loadQuiz();
+    </script>
+</body>
+</html>
