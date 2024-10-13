@@ -33,7 +33,7 @@
             const isAdmin = document.getElementById('isAdmin').checked; // Get the value of isAdmin checkbox
 
             try {
-                const response = await fetch('http://localhost:3000/api/auth/register', {
+                const response = await fetch('http://backend-container:5000/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
