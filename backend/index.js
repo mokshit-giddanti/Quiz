@@ -54,6 +54,45 @@ const ResultSchema = new mongoose.Schema({
 });
 const Result = mongoose.model('Result', ResultSchema);
 
+// Middleware for authentication
+const auth = (req, res, next) => {
+    const token = req.header('Authorization');
+    if (!token) return res.status(401).send({ message: 'Access denied. No token provided.' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        res.status(400).send({ message: 'Invalid token.' });
+    }
+};
+
+// Middleware for admin-only routes
+const adminAuth = (req, res, next) => {
+    if (!req.user.isAdmin) return res.status(403).send({ message: 'Access denied. Admins only.' });
+    next();
+};
+
+// User Registration
+app.post('/api/auth/register', async (req, res) => {
+    const { name, email, password, isAdmin } = req.body;
+
+    try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) return res.status(400).send({ message: 'User already exists' });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ name, email, password: hashedPassword, isAdmin });
+
+        await newUser.save();
+        res.send({ message: 'Registration successful' });
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
+
 
 
 // Start the server
